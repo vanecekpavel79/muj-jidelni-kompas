@@ -459,6 +459,24 @@
       padding: 10px;
     }
 
+    .meal-quick {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .quick-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #edf7ff;
+      color: #234557;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.82rem;
+    }
+
     .history-day h3 {
       margin: 0 0 6px;
       font-size: 1rem;
@@ -765,6 +783,8 @@
         <article class="card">
           <h2>Jídelní deník</h2>
           <p class="sub">Přidej hlavně vyfocená a uložená jídla. Bez zadávání gramů.</p>
+          <div class="tiny">Rychlé přidání: klepni na jídlo níže nebo ho vyber z nabídky.</div>
+          <div class="meal-quick" id="quickMealButtons"></div>
           <div class="food-row">
             <select id="reusableMealSelect" aria-label="Jídlo z nabídky"></select>
             <select id="portionSizeSelect" aria-label="Velikost porce">
@@ -779,9 +799,13 @@
             <button class="soft" id="clearMeals">Vymazat dnešní jídla</button>
           </div>
           <div class="tiny">Aplikace používá orientační velikosti porcí, aby nebylo nutné jídlo vážit.</div>
-          <h2 style="margin-top:14px;">Správa jídel z nabídky</h2>
-          <p class="sub">Uprav jídla dostupná v rozbalovací nabídce jídelníku.</p>
-          <div class="manager-list" id="savedFoodsManager"></div>
+          <details class="settings-collapse" style="margin-top:12px;">
+            <summary>Správa jídel z nabídky</summary>
+            <div class="photo-settings">
+              <p class="sub">Uprav jídla dostupná v rozbalovací nabídce jídelníku.</p>
+              <div class="manager-list" id="savedFoodsManager"></div>
+            </div>
+          </details>
         </article>
       </div>
     </section>
@@ -1179,7 +1203,9 @@
       const overrides = state.foodOverrides || {};
       const hidden = new Set(Array.isArray(state.hiddenFoodIds) ? state.hiddenFoodIds : []);
       const base = foodCatalog.map((food) => ({ ...food, ...(overrides[food.id] || {}) }));
-      return [...base, ...saved].filter((food) => !hidden.has(food.id));
+      const visibleSaved = saved.filter((food) => !hidden.has(food.id));
+      const visibleBase = base.filter((food) => !hidden.has(food.id));
+      return [...visibleSaved, ...visibleBase];
     }
 
     function buildPer100FromTotals(name, totalProtein, totalCarbs, totalFat, totalKcal, grams) {
@@ -1303,7 +1329,7 @@
       getSelectableFoods().forEach((food) => {
         const option = document.createElement("option");
         option.value = food.id;
-        option.textContent = food.name;
+        option.textContent = isBaseFood(food.id) ? food.name : `📸 ${food.name}`;
         select.appendChild(option);
       });
       if (!select.options.length) {
@@ -1312,6 +1338,42 @@
         option.textContent = "Nejdřív ulož jídlo z fotky do nabídky";
         select.appendChild(option);
       }
+      renderQuickMeals();
+    }
+
+    function renderQuickMeals() {
+      const node = document.getElementById("quickMealButtons");
+      if (!node) return;
+      node.innerHTML = "";
+      const foods = getSelectableFoods();
+      if (!foods.length) {
+        node.innerHTML = "<div class=\"tiny\">Zatím tu nejsou jídla pro rychlý výběr.</div>";
+        return;
+      }
+
+      const recentIds = [];
+      meals
+        .slice()
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .forEach((meal) => {
+          if (meal.foodId && !recentIds.includes(meal.foodId)) recentIds.push(meal.foodId);
+        });
+
+      const ordered = [
+        ...recentIds.map((id) => foods.find((f) => f.id === id)).filter(Boolean),
+        ...foods.filter((f) => !recentIds.includes(f.id))
+      ].slice(0, 8);
+
+      ordered.forEach((food) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "quick-btn";
+        btn.textContent = food.name;
+        btn.addEventListener("click", async () => {
+          await addReusableFoodById(food.id, "normal");
+        });
+        node.appendChild(btn);
+      });
     }
 
     function renderTasks() {
@@ -1587,6 +1649,7 @@
         list.innerHTML = "<div class=\"tiny\">Zatím tu nejsou žádná jídla pro dnešek.</div>";
       }
       refreshTotals();
+      renderQuickMeals();
     }
 
     function getNutritionTotals() {
@@ -2031,6 +2094,20 @@
       };
     }
 
+    async function addReusableFoodById(mealId, portionKey) {
+      const food = getSelectableFoods().find((f) => f.id === mealId);
+      if (!food) {
+        tipBox.textContent = "Tip: Nejprve ulož jídlo z fotky do nabídky a pak ho přidej.";
+        return;
+      }
+      await addMealFromTemplate(food, portionKey);
+      addXp(5);
+      await saveState();
+      renderMeals();
+      refreshStats();
+      await refreshHistoryView();
+    }
+
     function bindButtons() {
       document.getElementById("randomTip").addEventListener("click", () => {
         const tip = tips[Math.floor(Math.random() * tips.length)];
@@ -2040,18 +2117,7 @@
       document.getElementById("addReusableMeal").addEventListener("click", async () => {
         const mealId = document.getElementById("reusableMealSelect").value;
         const portionKey = document.getElementById("portionSizeSelect").value;
-        const food = getSelectableFoods().find((f) => f.id === mealId);
-        if (!food) {
-          tipBox.textContent = "Tip: Nejprve ulož jídlo z fotky do nabídky a pak ho přidej.";
-          return;
-        }
-
-        await addMealFromTemplate(food, portionKey);
-        addXp(5);
-        await saveState();
-        renderMeals();
-        refreshStats();
-        await refreshHistoryView();
+        await addReusableFoodById(mealId, portionKey);
       });
 
       document.getElementById("clearMeals").addEventListener("click", async () => {
