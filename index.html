@@ -1,0 +1,2132 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Můj jídelní kompas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-top: #ffe8c9;
+      --bg-bottom: #c8f2d6;
+      --surface: #ffffff;
+      --surface-soft: #fff8f0;
+      --ink: #18312b;
+      --accent: #ff8a00;
+      --accent-2: #1db57b;
+      --accent-3: #ff5d7a;
+      --good: #17985f;
+      --muted: #6a8078;
+      --shadow: 0 14px 30px rgba(15, 45, 35, 0.13);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Nunito", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(140deg, var(--bg-top), var(--bg-bottom));
+      overflow-x: hidden;
+    }
+
+    .backdrop-shape {
+      position: fixed;
+      border-radius: 999px;
+      z-index: -1;
+      filter: blur(4px);
+      opacity: 0.5;
+      animation: drift 14s ease-in-out infinite alternate;
+    }
+
+    .shape-1 {
+      width: 280px;
+      height: 280px;
+      background: #ffd46f;
+      top: -70px;
+      left: -80px;
+    }
+
+    .shape-2 {
+      width: 220px;
+      height: 220px;
+      background: #6ee7c4;
+      right: -60px;
+      top: 180px;
+      animation-delay: 1.5s;
+    }
+
+    .shape-3 {
+      width: 200px;
+      height: 200px;
+      background: #ff9db0;
+      bottom: -40px;
+      left: 20%;
+      animation-delay: 0.8s;
+    }
+
+    @keyframes drift {
+      to {
+        transform: translateY(12px) translateX(8px) scale(1.03);
+      }
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pop {
+      from {
+        opacity: 0.9;
+        transform: translateY(0) scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-80px) translateX(var(--x)) rotate(60deg) scale(0.5);
+      }
+    }
+
+    .app {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    .hero {
+      background: linear-gradient(130deg, #fff7ed 5%, #ffffff 60%, #ecfff4 100%);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+      animation: rise 0.6s ease;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-family: "Baloo 2", cursive;
+      font-size: clamp(1.9rem, 4vw, 2.8rem);
+      line-height: 1;
+      letter-spacing: 0.2px;
+    }
+
+    h2 {
+      margin: 0 0 6px;
+      font-family: "Baloo 2", cursive;
+      font-size: 1.45rem;
+      line-height: 1.1;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      background: var(--surface-soft);
+      border-radius: 16px;
+      padding: 12px;
+      border: 2px solid #fff1df;
+    }
+
+    .pill span {
+      display: block;
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .pill strong {
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .bar-wrap {
+      margin-top: 14px;
+      background: #e7f5ef;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 14px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), #ffd166, #6ddf9b);
+      transition: width 0.35s ease;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button,
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 800;
+      font-family: inherit;
+      transition: transform 0.2s ease;
+    }
+
+    button:hover,
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    button.soft,
+    .btn.soft {
+      background: #ffe8ec;
+      color: #70293b;
+    }
+
+    button.primary,
+    .btn.primary {
+      background: linear-gradient(90deg, #ffa63f, #ff7b5f);
+      color: #fff;
+    }
+
+    .note {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #f8f5ff;
+      font-size: 0.88rem;
+      color: #4b4f5f;
+      font-weight: 700;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 14px 0;
+    }
+
+    .tab-btn {
+      background: #ffffff;
+      border: 2px solid #ebeef1;
+      color: #25443a;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .tab-btn.active {
+      background: #16392f;
+      color: #fff;
+      border-color: #16392f;
+    }
+
+    .tab-panel {
+      display: none;
+      animation: rise 0.35s ease;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .tasks {
+      display: grid;
+      gap: 9px;
+      margin-top: 10px;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fff9;
+      border: 2px solid #ddf5e4;
+      border-radius: 14px;
+      padding: 10px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .task:hover {
+      transform: translateY(-2px);
+      border-color: #bdeccf;
+    }
+
+    .task input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent-2);
+      cursor: pointer;
+    }
+
+    .task label {
+      flex: 1;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .points {
+      font-size: 0.85rem;
+      color: var(--good);
+      font-weight: 800;
+    }
+
+    .puppy-box {
+      margin-top: 10px;
+      border-radius: 16px;
+      background: linear-gradient(140deg, #fff5ea, #f2fffb);
+      border: 2px solid #f3e7d2;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .puppy-avatar {
+      font-size: clamp(3rem, 7vw, 4.4rem);
+      line-height: 1;
+      display: inline-block;
+      transition: transform 0.22s ease;
+    }
+
+    .puppy-avatar.jump {
+      transform: translateY(-5px) scale(1.05);
+    }
+
+    .puppy-stage {
+      margin-top: 6px;
+      font-weight: 800;
+      color: #3c5b4e;
+    }
+
+    .puppy-mood {
+      margin-top: 4px;
+      color: #5a6f66;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .meter-wrap {
+      margin-top: 8px;
+      height: 10px;
+      background: #e7eee9;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .meter {
+      height: 100%;
+      width: 0;
+      transition: width 0.35s ease;
+      background: linear-gradient(90deg, #f9ac37, #38d39f);
+    }
+
+    .food-row {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr auto;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    input {
+      border: 2px solid #e5e9ee;
+      border-radius: 12px;
+      padding: 10px;
+      font-weight: 700;
+      font-family: inherit;
+    }
+
+    .totals {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .total-pill {
+      background: #f6fbf8;
+      border: 2px solid #def1e5;
+      border-radius: 12px;
+      padding: 8px;
+      font-weight: 800;
+      font-size: 0.92rem;
+    }
+
+    .total-meta {
+      margin-top: 4px;
+      font-size: 0.78rem;
+      color: #5f746c;
+      font-weight: 700;
+    }
+
+    .mini-progress {
+      margin-top: 6px;
+      height: 7px;
+      background: #e6efe9;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .mini-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.3s ease;
+      background: linear-gradient(90deg, #f6a43b, #5bcf8a);
+    }
+
+    .meal-list {
+      margin-top: 10px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .meal-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      background: #fff;
+      border: 2px solid #edf0f3;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .manager-list,
+    .history-list {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .manager-item,
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border: 2px solid #edf0f3;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .history-day {
+      background: #f7fbff;
+      border: 2px solid #dcecf8;
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    .history-day h3 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      font-family: "Baloo 2", cursive;
+    }
+
+    .history-meta {
+      color: #557081;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .meal-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .meal-info {
+      min-width: 0;
+      word-break: break-word;
+    }
+
+    .meal-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 2px solid #e3e8ed;
+      flex-shrink: 0;
+      background: #f2f4f6;
+    }
+
+    .meal-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .meal-item button {
+      border: none;
+      background: #ffe3ea;
+      color: #9d2f4b;
+      border-radius: 10px;
+      padding: 7px 9px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .photo-wrap {
+      margin-top: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .file-input-hidden {
+      display: none;
+    }
+
+    .upload-cta {
+      border: 2px dashed #9ec9df;
+      background: linear-gradient(160deg, #f6fcff, #eef7ff);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      display: grid;
+      gap: 8px;
+    }
+
+    .upload-cta strong {
+      font-size: 1rem;
+      color: #214456;
+    }
+
+    .upload-cta .hint {
+      color: #5c7686;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .settings-collapse {
+      border: 2px solid #f3e6ce;
+      border-radius: 14px;
+      background: #fffaf3;
+      overflow: hidden;
+    }
+
+    .settings-collapse summary {
+      cursor: pointer;
+      font-weight: 800;
+      padding: 10px 12px;
+      list-style: none;
+    }
+
+    .settings-collapse summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .photo-settings {
+      background: #fffaf3;
+      border-top: 2px solid #f3e6ce;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .photo-mode {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-weight: 700;
+      color: #2b4d40;
+    }
+
+    .photo-mode label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .ai-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .ai-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .photo-preview {
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 2px solid #e9edf0;
+      display: none;
+      background: #f8fafb;
+    }
+
+    .estimate-box {
+      background: #f6fbff;
+      border: 2px solid #ddeef9;
+      border-radius: 14px;
+      padding: 10px;
+      font-weight: 700;
+      color: #2a4859;
+      min-height: 48px;
+    }
+
+    .badge-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.86rem;
+      font-weight: 800;
+      background: #edf6f0;
+      color: #375d4a;
+      border: 2px dashed #bbdcc9;
+    }
+
+    .badge.unlocked {
+      background: #fff3cb;
+      color: #7b5400;
+      border-style: solid;
+      border-color: #ffd278;
+    }
+
+    .tiny {
+      font-size: 0.82rem;
+      color: #6b7f77;
+      margin-top: 8px;
+      font-weight: 700;
+    }
+
+    .celebrate {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .spark {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      animation: pop 900ms ease-out forwards;
+    }
+
+    @media (max-width: 740px) {
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .food-row {
+        grid-template-columns: 1fr;
+      }
+
+      .ai-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="backdrop-shape shape-1"></div>
+  <div class="backdrop-shape shape-2"></div>
+  <div class="backdrop-shape shape-3"></div>
+  <div class="celebrate" id="celebrate"></div>
+
+  <main class="app">
+    <section class="hero">
+      <h1>Můj jídelní kompas</h1>
+      <p class="sub">Tvoje denní podpora pro vyváženější jídlo, dobrou náladu a energii do školy i sportu.</p>
+      <div class="stats">
+        <div class="pill"><span>Úroveň</span><strong id="level">1</strong></div>
+        <div class="pill"><span>XP body</span><strong id="xp">0</strong></div>
+        <div class="pill"><span>Denní série</span><strong id="streak">0 dní</strong></div>
+        <div class="pill"><span>Splněno dnes</span><strong id="doneCount">0 / 6</strong></div>
+      </div>
+      <div class="bar-wrap"><div class="bar" id="xpBar"></div></div>
+      <div class="tiny" id="dailyProgressLabel">Dnešní výživový progres: Začátek dne.</div>
+      <div class="btn-row">
+        <button class="primary" id="randomTip">Náhodný tip dne</button>
+      </div>
+      <div class="note" id="tipBox">Tip: Jez pravidelně. Snídaně + oběd + večeře a 1-2 menší svačiny.</div>
+    </section>
+
+    <nav class="tabs" id="tabsNav">
+      <button class="tab-btn active" data-tab="overview">Přehled</button>
+      <button class="tab-btn" data-tab="missions">Mise</button>
+      <button class="tab-btn" data-tab="meals">Jídelníček</button>
+      <button class="tab-btn" data-tab="history">Historie</button>
+      <button class="tab-btn" data-tab="photo">Foto odhad</button>
+      <button class="tab-btn" data-tab="badges">Odznaky</button>
+    </nav>
+
+    <section class="tab-panel active" id="tab-overview">
+      <div class="grid">
+        <article class="card">
+          <h2>Můj parťák: štěňátko</h2>
+          <p class="sub">Čím lepší den, tím víc štěňátko roste a má lepší náladu.</p>
+          <div class="puppy-box">
+            <div class="puppy-avatar" id="puppyAvatar">🐶</div>
+            <div class="puppy-stage" id="puppyStage">Mladé štěně</div>
+            <div class="puppy-mood" id="puppyMood">Sbírá energii na první dobrodružství.</div>
+            <div class="meter-wrap"><div class="meter" id="puppyMeter"></div></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Dnešní živiny</h2>
+          <p class="sub">Souhrn jídel, která jsi dnes přidala.</p>
+          <div class="totals">
+            <div class="total-pill">
+              Bílkoviny: <span id="totalProtein">0 g</span>
+              <div class="total-meta">Cíl: 65 g/den</div>
+              <div class="mini-progress"><div class="mini-fill" id="totalProteinBar"></div></div>
+            </div>
+            <div class="total-pill">
+              Sacharidy: <span id="totalCarbs">0 g</span>
+              <div class="total-meta">Cíl: 220 g/den</div>
+              <div class="mini-progress"><div class="mini-fill" id="totalCarbsBar"></div></div>
+            </div>
+            <div class="total-pill">
+              Tuky: <span id="totalFat">0 g</span>
+              <div class="total-meta">Cíl: 70 g/den</div>
+              <div class="mini-progress"><div class="mini-fill" id="totalFatBar"></div></div>
+            </div>
+            <div class="total-pill">
+              Energie: <span id="totalKcal">0 kcal</span>
+              <div class="total-meta">Cíl: 2100 kcal/den</div>
+              <div class="mini-progress"><div class="mini-fill" id="totalKcalBar"></div></div>
+            </div>
+          </div>
+          <div class="tiny">Hodnoty jsou orientační a slouží hlavně pro budování návyků.</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-missions">
+      <div class="grid">
+        <article class="card">
+          <h2>Denní mise</h2>
+          <p class="sub">Každá splněná mise = XP body.</p>
+          <div class="tasks" id="tasks"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-meals">
+      <div class="grid">
+        <article class="card">
+          <h2>Jídelní deník</h2>
+          <p class="sub">Přidej hlavně vyfocená a uložená jídla. Bez zadávání gramů.</p>
+          <div class="food-row">
+            <select id="reusableMealSelect" aria-label="Jídlo z nabídky"></select>
+            <select id="portionSizeSelect" aria-label="Velikost porce">
+              <option value="small">Menší porce</option>
+              <option value="normal" selected>Běžná porce</option>
+              <option value="large">Větší porce</option>
+            </select>
+            <button class="primary" id="addReusableMeal">Přidat porci</button>
+          </div>
+          <div class="meal-list" id="mealList"></div>
+          <div class="btn-row">
+            <button class="soft" id="clearMeals">Vymazat dnešní jídla</button>
+          </div>
+          <div class="tiny">Aplikace používá orientační velikosti porcí, aby nebylo nutné jídlo vážit.</div>
+          <h2 style="margin-top:14px;">Správa jídel z nabídky</h2>
+          <p class="sub">Uprav jídla dostupná v rozbalovací nabídce jídelníku.</p>
+          <div class="manager-list" id="savedFoodsManager"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-history">
+      <div class="grid">
+        <article class="card">
+          <h2>Historie jídel</h2>
+          <p class="sub">Přehled jídel uložených v předchozích dnech.</p>
+          <div class="history-list" id="historyList"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-photo">
+      <div class="grid">
+        <article class="card">
+          <h2>Foto odhad živin</h2>
+          <p class="sub">Nahraj fotku jídla. Aplikace automaticky odhadne porci a živiny.</p>
+          <div class="photo-wrap">
+            <input class="file-input-hidden" type="file" id="photoInput" accept="image/*">
+            <label class="upload-cta" for="photoInput">
+              <strong>Nahraj fotku jídla sem</strong>
+              <span class="hint">Klikni pro výběr souboru z telefonu nebo počítače</span>
+              <span class="btn primary" role="button">Vybrat fotografii</span>
+            </label>
+            <img id="photoPreview" class="photo-preview" alt="Nahrané jídlo">
+            <div class="estimate-box" id="photoEstimate">Čekám na fotku jídla.</div>
+            <div class="btn-row">
+              <button class="primary" id="analyzePhoto">Odhadnout živiny</button>
+              <button class="soft" id="saveEstimate" disabled>Uložit odhad do jídelníčku</button>
+              <button class="soft" id="saveEstimateFood" disabled>Uložit jídlo do nabídky</button>
+            </div>
+            <details class="settings-collapse">
+              <summary>Pokročilé nastavení AI odhadu</summary>
+              <div class="photo-settings">
+                <div class="photo-mode">
+                  <label><input type="radio" name="estimateMode" value="local" checked> Rychlý lokální odhad</label>
+                  <label><input type="radio" name="estimateMode" value="ai"> Přesnější AI Vision</label>
+                </div>
+                <div class="ai-grid">
+                  <input id="apiEndpoint" class="full" value="https://api.openai.com/v1/responses" placeholder="API endpoint">
+                  <input id="apiModel" placeholder="Model (např. gpt-4.1-mini)" value="gpt-4.1-mini">
+                  <input id="apiKey" type="password" placeholder="API klíč (Bearer)">
+                  <button id="saveAiSettings" class="soft full" type="button">Uložit AI nastavení</button>
+                </div>
+                <div class="tiny">Klíč se ukládá jen lokálně v této aplikaci (IndexedDB).</div>
+              </div>
+            </details>
+            <div class="tiny">Odhad je orientační a počítá se automaticky z barev a plochy jídla na fotce.</div>
+          </div>
+          <canvas id="analysisCanvas" width="512" height="512" style="display:none"></canvas>
+        </article>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-badges">
+      <div class="grid">
+        <article class="card">
+          <h2>Odznaky</h2>
+          <p class="sub">Odemkni je sbíráním bodů a pravidelností.</p>
+          <div class="badge-list">
+            <span class="badge" id="b100">100 XP: Startérka</span>
+            <span class="badge" id="b300">300 XP: Hrdinka svačin</span>
+            <span class="badge" id="b7">Série 7 dní: Mistryně rytmu</span>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const DB_NAME = "MujJidelniKompasDB_Reset1";
+    const DB_VERSION = 1;
+    const STATE_KEY = "main";
+
+    const tasks = [
+      { id: "water", label: "Vypila jsem aspoň 6-8 sklenic vody", xp: 20 },
+      { id: "breakfast", label: "Dala jsem si snídani", xp: 20 },
+      { id: "fruit", label: "Snědla jsem ovoce", xp: 15 },
+      { id: "veg", label: "Snědla jsem zeleninu", xp: 15 },
+      { id: "protein", label: "Měla jsem zdroj bílkovin (např. vejce/jogurt/luštěniny)", xp: 20 },
+      { id: "sweetLimit", label: "Sladkosti jen v menším množství", xp: 10 }
+    ];
+
+    const foodCatalog = [
+      { id: "oves", name: "ovesná kaše", protein: 13, carbs: 60, fat: 7, kcal: 370 },
+      { id: "yogurt", name: "bílý jogurt", protein: 4, carbs: 5, fat: 3, kcal: 63 },
+      { id: "egg", name: "vejce", protein: 13, carbs: 1.1, fat: 11, kcal: 155 },
+      { id: "chicken", name: "kuřecí prsa", protein: 23, carbs: 0, fat: 1.9, kcal: 110 },
+      { id: "rice", name: "rýže vařená", protein: 2.7, carbs: 28, fat: 0.3, kcal: 130 },
+      { id: "potato", name: "brambory vařené", protein: 2, carbs: 17, fat: 0.1, kcal: 77 },
+      { id: "apple", name: "jablko", protein: 0.3, carbs: 14, fat: 0.2, kcal: 52 },
+      { id: "banana", name: "banán", protein: 1.1, carbs: 23, fat: 0.3, kcal: 89 },
+      { id: "cottage", name: "cottage sýr", protein: 12, carbs: 3, fat: 4, kcal: 98 },
+      { id: "bread", name: "celozrnné pečivo", protein: 9, carbs: 45, fat: 3, kcal: 245 },
+      { id: "cheese", name: "tvrdý sýr", protein: 25, carbs: 0.5, fat: 30, kcal: 380 },
+      { id: "salmon", name: "losos", protein: 20, carbs: 0, fat: 13, kcal: 208 },
+      { id: "lentils", name: "čočka vařená", protein: 9, carbs: 20, fat: 0.4, kcal: 116 },
+      { id: "beans", name: "fazole vařené", protein: 8.7, carbs: 23, fat: 0.5, kcal: 127 },
+      { id: "broccoli", name: "brokolice", protein: 2.8, carbs: 7, fat: 0.4, kcal: 35 },
+      { id: "carrot", name: "mrkev", protein: 0.9, carbs: 10, fat: 0.2, kcal: 41 }
+    ];
+
+    const photoProfiles = [
+      { id: "salad", name: "zeleninový talíř", protein: 2.5, carbs: 6, fat: 0.5, kcal: 40 },
+      { id: "rice_bowl", name: "rýžová miska", protein: 5.5, carbs: 28, fat: 3.5, kcal: 165 },
+      { id: "pasta", name: "těstoviny", protein: 6, carbs: 31, fat: 4.5, kcal: 190 },
+      { id: "meat_plate", name: "masový talíř", protein: 18, carbs: 8, fat: 10, kcal: 200 },
+      { id: "sandwich", name: "sendvič/pečivo", protein: 10, carbs: 35, fat: 8, kcal: 260 }
+    ];
+
+    const tips = [
+      "K snídani zkus jogurt nebo skyr + ovoce + ovesné vločky.",
+      "Do každého hlavního jídla přidej bílkovinu: vejce, rybu, maso, luštěniny nebo sýr.",
+      "K svačině se hodí kombinace: pečivo + sýr/cottage + zelenina.",
+      "Když je těžké sníst velkou porci, dej si menší porce častěji během dne.",
+      "Praktická svačina do školy: kefír nebo proteinový jogurt + banán.",
+      "Do kaše nebo jogurtu přidej ořechové máslo, zvýší energii i živiny.",
+      "Vajíčka jsou rychlá volba: natvrdo, míchaná nebo omeleta do 10 minut.",
+      "Po sportu si dej do 60 minut jídlo se sacharidy a bílkovinou.",
+      "Skvělá dvojice: rýže + kuře/tempeh, nebo těstoviny + tuňák/sýr.",
+      "Když nemáš chuť jíst, pomůže tekutá svačina: mléčný nápoj nebo smoothie.",
+      "Do polévky můžeš přidat luštěniny, vejce nebo jogurt pro více bílkovin.",
+      "K pečivu přidej vždy něco navíc: šunku, sýr, hummus nebo tvarohovou pomazánku.",
+      "Neboj se 'dvojité' svačiny: třeba jogurt a k tomu menší sendvič.",
+      "Pravidelnost je důležitá: zkus 3 hlavní jídla a 2 svačiny denně.",
+      "Při únavě bývá užitečné jídlo s bílkovinou místo samotné sladkosti.",
+      "Rychlý tip: hrst ořechů + ovoce + mléčný výrobek je super trio.",
+      "K večeři zkus něco jednoduchého: tortilla s vejcem/sýrem a zeleninou.",
+      "Když je jídlo stresující, je v pořádku říct si o pomoc dospělému, kterému věříš.",
+      "Podpora funguje: jez s rodinou nebo kamarádkou, často se jí snáz.",
+      "Pokud máš strach z jídla nebo dlouhodobě jíš málo, promluv si s lékařem nebo nutričním terapeutem."
+    ];
+
+    const portionMultipliers = {
+      small: 0.8,
+      normal: 1,
+      large: 1.25
+    };
+
+    let db;
+    let state;
+    let meals = [];
+    let allMeals = [];
+    let pendingPhotoEstimate = null;
+
+    const tasksNode = document.getElementById("tasks");
+    const xpNode = document.getElementById("xp");
+    const levelNode = document.getElementById("level");
+    const streakNode = document.getElementById("streak");
+    const doneNode = document.getElementById("doneCount");
+    const xpBar = document.getElementById("xpBar");
+    const dailyProgressLabel = document.getElementById("dailyProgressLabel");
+    const tipBox = document.getElementById("tipBox");
+
+    init();
+
+    async function init() {
+      db = await openDatabase();
+      state = await loadState();
+      meals = await loadMealsByDate(todayKey());
+      allMeals = await loadAllMeals();
+
+      setupTabs();
+      setupFoodCatalog();
+      renderTasks();
+      renderMeals();
+      renderHistory();
+      renderSavedFoodsManager();
+      refreshStats();
+      setupPhotoModule();
+      bindButtons();
+      scheduleMidnightReset();
+    }
+
+    function todayKey() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function round(num) {
+      return Math.round(num * 10) / 10;
+    }
+
+    function levelFromXp(xp) {
+      return Math.floor(xp / 100) + 1;
+    }
+
+    function progressToNext(xp) {
+      return xp % 100;
+    }
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = () => {
+          const upgradeDb = request.result;
+          if (!upgradeDb.objectStoreNames.contains("state")) {
+            upgradeDb.createObjectStore("state", { keyPath: "id" });
+          }
+          if (!upgradeDb.objectStoreNames.contains("meals")) {
+            const mealStore = upgradeDb.createObjectStore("meals", { keyPath: "id", autoIncrement: true });
+            mealStore.createIndex("date", "date", { unique: false });
+          }
+        };
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbGet(storeName, key) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, "readonly");
+        const store = tx.objectStore(storeName);
+        const request = store.get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbPut(storeName, value) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        store.put(value);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function dbAdd(storeName, value) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        const request = store.add(value);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbDelete(storeName, key) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        store.delete(key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function dbGetMealsByDate(date) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction("meals", "readonly");
+        const store = tx.objectStore("meals");
+        const index = store.index("date");
+        const request = index.getAll(date);
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbGetAllMeals() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction("meals", "readonly");
+        const store = tx.objectStore("meals");
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function loadState() {
+      const def = {
+        id: STATE_KEY,
+        xp: 0,
+        streak: 0,
+        lastDate: "",
+        streakDate: "",
+        tasksDoneToday: {},
+        estimateMode: "local",
+        aiSettings: {
+          endpoint: "https://api.openai.com/v1/responses",
+          model: "gpt-4.1-mini",
+          apiKey: ""
+        },
+        savedPhotoFoods: [],
+        foodOverrides: {},
+        hiddenFoodIds: []
+      };
+
+      const saved = await dbGet("state", STATE_KEY);
+      if (!saved) {
+        await dbPut("state", def);
+        return def;
+      }
+
+      const merged = { ...def, ...saved };
+      if (merged.lastDate !== todayKey()) {
+        merged.tasksDoneToday = {};
+      }
+      await dbPut("state", merged);
+      return merged;
+    }
+
+    async function saveState() {
+      state.id = STATE_KEY;
+      state.lastDate = todayKey();
+      await dbPut("state", state);
+    }
+
+    async function loadMealsByDate(date) {
+      return dbGetMealsByDate(date);
+    }
+
+    async function loadAllMeals() {
+      return dbGetAllMeals();
+    }
+
+    async function refreshHistoryView() {
+      allMeals = await loadAllMeals();
+      renderHistory();
+    }
+
+    async function addMealEntry(entry) {
+      const id = await dbAdd("meals", entry);
+      entry.id = id;
+      meals.push(entry);
+    }
+
+    function formatPortionLabel(portionKey) {
+      if (portionKey === "small") return "menší porce";
+      if (portionKey === "large") return "větší porce";
+      return "běžná porce";
+    }
+
+    async function addMealFromTemplate(food, portionKey) {
+      const multiplier = portionMultipliers[portionKey] || 1;
+      const defaultServing = Number(food.defaultServingGrams) || 220;
+      const factor = (defaultServing / 100) * multiplier;
+      await addMealEntry({
+        date: todayKey(),
+        source: "reused",
+        foodId: food.id,
+        name: food.name,
+        portionLabel: formatPortionLabel(portionKey),
+        referenceServingGrams: round(defaultServing * multiplier),
+        protein: round(food.protein * factor),
+        carbs: round(food.carbs * factor),
+        fat: round(food.fat * factor),
+        kcal: round(food.kcal * factor),
+        createdAt: Date.now()
+      });
+    }
+
+    async function addPhotoEstimatedMeal(estimate) {
+      await addMealEntry({
+        date: todayKey(),
+        source: "photo",
+        foodId: estimate.foodId,
+        name: estimate.name,
+        portionLabel: "odhad porce",
+        grams: estimate.grams,
+        referenceServingGrams: estimate.grams,
+        protein: estimate.protein,
+        carbs: estimate.carbs,
+        fat: estimate.fat,
+        kcal: estimate.kcal,
+        confidence: estimate.confidence,
+        previewUrl: estimate.previewUrl || "",
+        estimateMode: estimate.mode || "local",
+        createdAt: Date.now()
+      });
+    }
+
+    async function removeMeal(id) {
+      await dbDelete("meals", id);
+      meals = meals.filter((m) => m.id !== id);
+    }
+
+    async function renameMeal(id, newName) {
+      const target = meals.find((m) => m.id === id);
+      if (!target) return;
+      target.name = newName;
+      await dbPut("meals", target);
+    }
+
+    function getSelectableFoods() {
+      const saved = Array.isArray(state.savedPhotoFoods) ? state.savedPhotoFoods : [];
+      const overrides = state.foodOverrides || {};
+      const hidden = new Set(Array.isArray(state.hiddenFoodIds) ? state.hiddenFoodIds : []);
+      const base = foodCatalog.map((food) => ({ ...food, ...(overrides[food.id] || {}) }));
+      return [...base, ...saved].filter((food) => !hidden.has(food.id));
+    }
+
+    function buildPer100FromTotals(name, totalProtein, totalCarbs, totalFat, totalKcal, grams) {
+      const safeGrams = Math.max(1, Number(grams) || 1);
+      const factor = 100 / safeGrams;
+      return {
+        id: `photo_food_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        name,
+        protein: round(totalProtein * factor),
+        carbs: round(totalCarbs * factor),
+        fat: round(totalFat * factor),
+        kcal: round(totalKcal * factor),
+        defaultServingGrams: round(safeGrams)
+      };
+    }
+
+    async function saveFoodToCatalog(entry) {
+      if (!Array.isArray(state.savedPhotoFoods)) {
+        state.savedPhotoFoods = [];
+      }
+      const key = entry.name.trim().toLowerCase();
+      if (!key) return "invalid";
+      const existing = state.savedPhotoFoods.find((f) => f.name.trim().toLowerCase() === key);
+      if (existing) {
+        existing.protein = entry.protein;
+        existing.carbs = entry.carbs;
+        existing.fat = entry.fat;
+        existing.kcal = entry.kcal;
+        existing.defaultServingGrams = entry.defaultServingGrams || existing.defaultServingGrams || 220;
+        await saveState();
+        setupFoodCatalog();
+        renderSavedFoodsManager();
+        return "updated";
+      }
+
+      state.savedPhotoFoods.push(entry);
+      await saveState();
+      setupFoodCatalog();
+      renderSavedFoodsManager();
+      return "added";
+    }
+
+    async function updateSavedFood(id, payload) {
+      if (!Array.isArray(state.savedPhotoFoods)) return;
+      const idx = state.savedPhotoFoods.findIndex((f) => f.id === id);
+      if (idx < 0) return;
+      state.savedPhotoFoods[idx] = { ...state.savedPhotoFoods[idx], ...payload };
+      await saveState();
+      setupFoodCatalog();
+      renderSavedFoodsManager();
+    }
+
+    async function updateBaseFood(id, payload) {
+      if (!state.foodOverrides) state.foodOverrides = {};
+      state.foodOverrides[id] = {
+        name: payload.name,
+        protein: payload.protein,
+        carbs: payload.carbs,
+        fat: payload.fat,
+        kcal: payload.kcal,
+        defaultServingGrams: payload.defaultServingGrams
+      };
+      await saveState();
+      setupFoodCatalog();
+      renderSavedFoodsManager();
+    }
+
+    async function removeSavedFood(id) {
+      if (!Array.isArray(state.savedPhotoFoods)) return;
+      state.savedPhotoFoods = state.savedPhotoFoods.filter((f) => f.id !== id);
+      await saveState();
+      setupFoodCatalog();
+      renderSavedFoodsManager();
+    }
+
+    async function hideBaseFood(id) {
+      if (!Array.isArray(state.hiddenFoodIds)) state.hiddenFoodIds = [];
+      if (!state.hiddenFoodIds.includes(id)) {
+        state.hiddenFoodIds.push(id);
+      }
+      await saveState();
+      setupFoodCatalog();
+      renderSavedFoodsManager();
+    }
+
+    async function deleteFoodFromCatalog(id) {
+      if (isBaseFood(id)) {
+        await hideBaseFood(id);
+      } else {
+        await removeSavedFood(id);
+      }
+    }
+
+    function isBaseFood(id) {
+      return foodCatalog.some((food) => food.id === id);
+    }
+
+    async function clearTodayMeals() {
+      const ids = meals.map((m) => m.id);
+      await Promise.all(ids.map((id) => dbDelete("meals", id)));
+      meals = [];
+    }
+
+    function setupTabs() {
+      const buttons = Array.from(document.querySelectorAll(".tab-btn"));
+      const panels = Array.from(document.querySelectorAll(".tab-panel"));
+
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const tab = btn.dataset.tab;
+          buttons.forEach((b) => b.classList.toggle("active", b === btn));
+          panels.forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${tab}`));
+        });
+      });
+    }
+
+    function setupFoodCatalog() {
+      const select = document.getElementById("reusableMealSelect");
+      if (!select) return;
+      select.innerHTML = "";
+      getSelectableFoods().forEach((food) => {
+        const option = document.createElement("option");
+        option.value = food.id;
+        option.textContent = food.name;
+        select.appendChild(option);
+      });
+      if (!select.options.length) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "Nejdřív ulož jídlo z fotky do nabídky";
+        select.appendChild(option);
+      }
+    }
+
+    function renderTasks() {
+      tasksNode.innerHTML = "";
+      tasks.forEach((task) => {
+        const wrap = document.createElement("div");
+        wrap.className = "task";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = task.id;
+        checkbox.checked = Boolean(state.tasksDoneToday[task.id]);
+
+        const label = document.createElement("label");
+        label.htmlFor = task.id;
+        label.textContent = task.label;
+
+        const points = document.createElement("span");
+        points.className = "points";
+        points.textContent = `+${task.xp} XP`;
+
+        checkbox.addEventListener("change", async () => {
+          if (checkbox.checked && !state.tasksDoneToday[task.id]) {
+            state.tasksDoneToday[task.id] = true;
+            addXp(task.xp);
+            celebrate();
+            checkStreak();
+          } else if (!checkbox.checked && state.tasksDoneToday[task.id]) {
+            state.tasksDoneToday[task.id] = false;
+            state.xp = Math.max(0, state.xp - task.xp);
+          }
+          await saveState();
+          refreshStats();
+        });
+
+        wrap.append(checkbox, label, points);
+        tasksNode.appendChild(wrap);
+      });
+    }
+
+    function renderSavedFoodsManager() {
+      const node = document.getElementById("savedFoodsManager");
+      node.innerHTML = "";
+      const foods = getSelectableFoods();
+      if (!foods.length) {
+        node.innerHTML = "<div class=\"tiny\">V nabídce zatím nejsou žádná jídla.</div>";
+        return;
+      }
+
+      foods.forEach((food) => {
+        const row = document.createElement("div");
+        row.className = "manager-item";
+
+        const info = document.createElement("span");
+        const sourceLabel = isBaseFood(food.id) ? " [základ]" : " [vlastní]";
+        const servingInfo = Number(food.defaultServingGrams) || 220;
+        info.textContent = `${food.name}${sourceLabel} | B ${food.protein} g, S ${food.carbs} g, T ${food.fat} g, ${food.kcal} kcal (na 100 g), porce ~${servingInfo} g`;
+
+        const actions = document.createElement("div");
+        actions.className = "meal-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.textContent = "Upravit";
+        editBtn.addEventListener("click", async () => {
+          const name = window.prompt("Název jídla:", food.name);
+          if (!name) return;
+          const protein = window.prompt("Bílkoviny na 100 g:", String(food.protein));
+          const carbs = window.prompt("Sacharidy na 100 g:", String(food.carbs));
+          const fat = window.prompt("Tuky na 100 g:", String(food.fat));
+          const kcal = window.prompt("kcal na 100 g:", String(food.kcal));
+          const serving = window.prompt("Typická porce v g (jen orientačně):", String(Number(food.defaultServingGrams) || 220));
+          const parsedProtein = Number(protein);
+          const parsedCarbs = Number(carbs);
+          const parsedFat = Number(fat);
+          const parsedKcal = Number(kcal);
+          const parsedServing = Number(serving);
+          const payload = {
+            name: name.trim() || food.name,
+            protein: round(Number.isFinite(parsedProtein) ? parsedProtein : food.protein),
+            carbs: round(Number.isFinite(parsedCarbs) ? parsedCarbs : food.carbs),
+            fat: round(Number.isFinite(parsedFat) ? parsedFat : food.fat),
+            kcal: round(Number.isFinite(parsedKcal) ? parsedKcal : food.kcal),
+            defaultServingGrams: round(Number.isFinite(parsedServing) ? parsedServing : (Number(food.defaultServingGrams) || 220))
+          };
+          if (isBaseFood(food.id)) {
+            await updateBaseFood(food.id, payload);
+          } else {
+            await updateSavedFood(food.id, payload);
+          }
+          tipBox.textContent = `Tip: Jídlo „${payload.name}“ bylo upraveno.`;
+        });
+        actions.appendChild(editBtn);
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.textContent = "Smazat";
+        removeBtn.addEventListener("click", async () => {
+          await deleteFoodFromCatalog(food.id);
+          tipBox.textContent = `Tip: Jídlo „${food.name}“ bylo smazáno z nabídky.`;
+        });
+        actions.appendChild(removeBtn);
+
+        row.append(info, actions);
+        node.appendChild(row);
+      });
+    }
+
+    async function resetTasksForNewDay() {
+      state.tasksDoneToday = {};
+      await saveState();
+      meals = await loadMealsByDate(todayKey());
+      renderTasks();
+      renderMeals();
+      refreshStats();
+      await refreshHistoryView();
+      tipBox.textContent = "Tip: Nový den, nový začátek. Dnes stačí malé kroky.";
+    }
+
+    function scheduleMidnightReset() {
+      const now = new Date();
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
+      const waitMs = next.getTime() - now.getTime();
+      setTimeout(async () => {
+        await resetTasksForNewDay();
+        scheduleMidnightReset();
+      }, waitMs);
+    }
+
+    function formatDateCz(dateKey) {
+      const parts = String(dateKey).split("-");
+      if (parts.length !== 3) return dateKey;
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      return d.toLocaleDateString("cs-CZ", { weekday: "short", day: "numeric", month: "numeric", year: "numeric" });
+    }
+
+    function renderHistory() {
+      const node = document.getElementById("historyList");
+      node.innerHTML = "";
+      if (!allMeals.length) {
+        node.innerHTML = "<div class=\"tiny\">Historie je zatím prázdná.</div>";
+        return;
+      }
+
+      const grouped = allMeals.reduce((acc, meal) => {
+        if (!acc[meal.date]) acc[meal.date] = [];
+        acc[meal.date].push(meal);
+        return acc;
+      }, {});
+
+      const days = Object.keys(grouped).sort((a, b) => (a < b ? 1 : -1));
+      days.forEach((day) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "history-day";
+
+        const title = document.createElement("h3");
+        title.textContent = formatDateCz(day);
+
+        const totals = grouped[day].reduce(
+          (acc, meal) => {
+            acc.kcal += Number(meal.kcal) || 0;
+            acc.count += 1;
+            return acc;
+          },
+          { kcal: 0, count: 0 }
+        );
+
+        const meta = document.createElement("div");
+        meta.className = "history-meta";
+        meta.textContent = `${totals.count} jídel | ${round(totals.kcal)} kcal`;
+
+        const items = document.createElement("div");
+        items.className = "history-list";
+        grouped[day]
+          .slice()
+          .sort((a, b) => a.createdAt - b.createdAt)
+          .forEach((meal) => {
+            const row = document.createElement("div");
+            row.className = "history-item";
+            const source = meal.source === "photo" ? " [foto]" : "";
+            const portion = meal.portionLabel || (meal.grams ? `${meal.grams} g` : "porce");
+            row.textContent = `${meal.name}${source} (${portion}) | B ${meal.protein} g, S ${meal.carbs} g, T ${meal.fat} g, ${meal.kcal} kcal`;
+            items.appendChild(row);
+          });
+
+        wrapper.append(title, meta, items);
+        node.appendChild(wrapper);
+      });
+    }
+
+    function renderMeals() {
+      const list = document.getElementById("mealList");
+      list.innerHTML = "";
+
+      meals
+        .slice()
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .forEach((meal) => {
+          const item = document.createElement("div");
+          item.className = "meal-item";
+
+          const main = document.createElement("div");
+          main.className = "meal-main";
+          if (meal.previewUrl) {
+            const thumb = document.createElement("img");
+            thumb.className = "meal-thumb";
+            thumb.src = meal.previewUrl;
+            thumb.alt = meal.name;
+            main.appendChild(thumb);
+          }
+
+          const text = document.createElement("span");
+          text.className = "meal-info";
+          const sourceLabel = meal.source === "photo" ? " [foto]" : "";
+          const portionText = meal.portionLabel || (meal.grams ? `${meal.grams} g` : "porce");
+          text.textContent = `${meal.name}${sourceLabel} (${portionText}) | B ${meal.protein} g, S ${meal.carbs} g, T ${meal.fat} g, ${meal.kcal} kcal`;
+          main.appendChild(text);
+
+          const actions = document.createElement("div");
+          actions.className = "meal-actions";
+
+          if (meal.source === "photo") {
+            const renameButton = document.createElement("button");
+            renameButton.type = "button";
+            renameButton.textContent = "Přejmenovat";
+            renameButton.addEventListener("click", async () => {
+              const candidate = window.prompt("Nový název jídla:", meal.name);
+              if (!candidate) return;
+              const cleanName = candidate.trim();
+              if (!cleanName) return;
+              await renameMeal(meal.id, cleanName);
+              renderMeals();
+              await refreshHistoryView();
+            });
+            actions.appendChild(renameButton);
+
+            const saveFoodButton = document.createElement("button");
+            saveFoodButton.type = "button";
+            saveFoodButton.textContent = "Do nabídky";
+            saveFoodButton.addEventListener("click", async () => {
+              const reusable = buildPer100FromTotals(
+                meal.name,
+                Number(meal.protein) || 0,
+                Number(meal.carbs) || 0,
+                Number(meal.fat) || 0,
+                Number(meal.kcal) || 0,
+                Number(meal.referenceServingGrams || meal.grams) || 220
+              );
+              const status = await saveFoodToCatalog(reusable);
+              tipBox.textContent = status === "updated"
+                ? `Tip: Jídlo „${meal.name}“ bylo v nabídce aktualizováno.`
+                : `Tip: Jídlo „${meal.name}“ je nově v nabídce jídel.`;
+            });
+            actions.appendChild(saveFoodButton);
+          }
+
+          const removeButton = document.createElement("button");
+          removeButton.type = "button";
+          removeButton.textContent = "Smazat";
+          removeButton.addEventListener("click", async () => {
+            await removeMeal(meal.id);
+            renderMeals();
+            refreshStats();
+            await refreshHistoryView();
+          });
+          actions.appendChild(removeButton);
+
+          item.append(main, actions);
+          list.appendChild(item);
+        });
+
+      if (!meals.length) {
+        list.innerHTML = "<div class=\"tiny\">Zatím tu nejsou žádná jídla pro dnešek.</div>";
+      }
+      refreshTotals();
+    }
+
+    function getNutritionTotals() {
+      return meals.reduce(
+        (acc, meal) => {
+          acc.protein += meal.protein;
+          acc.carbs += meal.carbs;
+          acc.fat += meal.fat;
+          acc.kcal += meal.kcal;
+          return acc;
+        },
+        { protein: 0, carbs: 0, fat: 0, kcal: 0 }
+      );
+    }
+
+    function refreshTotals() {
+      const totals = getNutritionTotals();
+      document.getElementById("totalProtein").textContent = `${round(totals.protein)} g`;
+      document.getElementById("totalCarbs").textContent = `${round(totals.carbs)} g`;
+      document.getElementById("totalFat").textContent = `${round(totals.fat)} g`;
+      document.getElementById("totalKcal").textContent = `${round(totals.kcal)} kcal`;
+      updateNutrientBars(totals);
+    }
+
+    function nutrientPercent(value, target) {
+      if (!target) return 0;
+      return Math.min(100, Math.max(0, (value / target) * 100));
+    }
+
+    function updateNutrientBars(totals) {
+      const bars = [
+        { id: "totalProteinBar", value: totals.protein, target: 65 },
+        { id: "totalCarbsBar", value: totals.carbs, target: 220 },
+        { id: "totalFatBar", value: totals.fat, target: 70 },
+        { id: "totalKcalBar", value: totals.kcal, target: 2100 }
+      ];
+
+      bars.forEach((item) => {
+        const node = document.getElementById(item.id);
+        if (!node) return;
+        const pct = nutrientPercent(item.value, item.target);
+        node.style.width = `${pct}%`;
+      });
+    }
+
+    function addXp(amount) {
+      state.xp += amount;
+    }
+
+    function checkStreak() {
+      const done = Object.values(state.tasksDoneToday).filter(Boolean).length;
+      if (done >= 4 && state.streakDate !== todayKey()) {
+        state.streak += 1;
+        state.streakDate = todayKey();
+      }
+    }
+
+    function updateBadges() {
+      document.getElementById("b100").classList.toggle("unlocked", state.xp >= 100);
+      document.getElementById("b300").classList.toggle("unlocked", state.xp >= 300);
+      document.getElementById("b7").classList.toggle("unlocked", state.streak >= 7);
+    }
+
+    function getMacroScore(totals) {
+      let score = 0;
+      if (totals.protein >= 45) score += 18;
+      if (totals.carbs >= 130 && totals.carbs <= 280) score += 14;
+      if (totals.fat >= 35 && totals.fat <= 90) score += 14;
+      if (totals.kcal >= 1400 && totals.kcal <= 2600) score += 14;
+      return score;
+    }
+
+    function getDailyNutritionProgress(totals, doneMissions) {
+      const missionScore = Math.min(40, (doneMissions / tasks.length) * 40);
+      const proteinScore = Math.min(25, (totals.protein / 65) * 25);
+      const kcalScore = Math.min(15, (totals.kcal / 2100) * 15);
+      const carbsScore = Math.min(10, (totals.carbs / 220) * 10);
+      const fatScore = Math.min(10, (totals.fat / 70) * 10);
+      const total = round(missionScore + proteinScore + kcalScore + carbsScore + fatScore);
+      return Math.min(100, Math.max(0, total));
+    }
+
+    function progressMessage(progress) {
+      if (progress < 25) return "Začátek dne: zkus první jídlo s bílkovinou.";
+      if (progress < 50) return "Skvělý začátek: přidej další výživnou svačinu.";
+      if (progress < 75) return "Jde ti to: dnešní tělo dostává důležité živiny.";
+      if (progress < 100) return "Výborně: jsi blízko denního výživového cíle.";
+      return "Paráda: dnešní výživový cíl je splněný.";
+    }
+
+    function refreshPuppy() {
+      const avatar = document.getElementById("puppyAvatar");
+      const stage = document.getElementById("puppyStage");
+      const mood = document.getElementById("puppyMood");
+      const meter = document.getElementById("puppyMeter");
+
+      const totals = getNutritionTotals();
+      const done = Object.values(state.tasksDoneToday).filter(Boolean).length;
+      const missionScore = Math.min(40, done * 7);
+      const macroScore = getMacroScore(totals);
+      const growthScore = Math.min(100, missionScore + macroScore + Math.min(25, state.streak * 2));
+
+      meter.style.width = `${growthScore}%`;
+
+      if (growthScore < 30) {
+        avatar.textContent = "🐶";
+        stage.textContent = "Mladé štěně";
+        mood.textContent = "Potřebuje pravidelná jídla a vodu.";
+      } else if (growthScore < 60) {
+        avatar.textContent = "🐕";
+        stage.textContent = "Zvídavé štěně";
+        mood.textContent = "Má víc energie, běhá a učí se nové triky.";
+      } else if (growthScore < 85) {
+        avatar.textContent = "🦮";
+        stage.textContent = "Skvělý parťák";
+        mood.textContent = "Skvělá práce. Štěně je v super kondici.";
+      } else {
+        avatar.textContent = "🐕‍🦺";
+        stage.textContent = "Hero štěně";
+        mood.textContent = "Top forma. Tvůj parťák září energií.";
+      }
+
+      avatar.classList.add("jump");
+      setTimeout(() => avatar.classList.remove("jump"), 230);
+    }
+
+    function refreshStats() {
+      const done = Object.values(state.tasksDoneToday).filter(Boolean).length;
+      const totals = getNutritionTotals();
+      const dailyProgress = getDailyNutritionProgress(totals, done);
+      const hue = Math.round(18 + (dailyProgress / 100) * 105);
+      xpNode.textContent = state.xp;
+      levelNode.textContent = levelFromXp(state.xp);
+      streakNode.textContent = `${state.streak} dní`;
+      doneNode.textContent = `${done} / ${tasks.length}`;
+      xpBar.style.width = `${dailyProgress}%`;
+      xpBar.style.background = `linear-gradient(90deg, hsl(${Math.max(8, hue - 20)} 88% 58%), hsl(${hue} 82% 54%), hsl(${Math.min(145, hue + 16)} 74% 46%))`;
+      dailyProgressLabel.textContent = `Dnešní výživový progres: ${progressMessage(dailyProgress)}`;
+      updateBadges();
+      refreshTotals();
+      refreshPuppy();
+    }
+
+    function setupPhotoModule() {
+      const photoInput = document.getElementById("photoInput");
+      const preview = document.getElementById("photoPreview");
+      const estimateBox = document.getElementById("photoEstimate");
+      const saveBtn = document.getElementById("saveEstimate");
+      const saveFoodBtn = document.getElementById("saveEstimateFood");
+      const endpointInput = document.getElementById("apiEndpoint");
+      const modelInput = document.getElementById("apiModel");
+      const apiKeyInput = document.getElementById("apiKey");
+      const modeInputs = document.querySelectorAll("input[name='estimateMode']");
+
+      endpointInput.value = state.aiSettings?.endpoint || endpointInput.value;
+      modelInput.value = state.aiSettings?.model || modelInput.value;
+      apiKeyInput.value = state.aiSettings?.apiKey || "";
+      modeInputs.forEach((radio) => {
+        radio.checked = radio.value === (state.estimateMode || "local");
+      });
+
+      photoInput.addEventListener("change", () => {
+        const file = photoInput.files?.[0];
+        pendingPhotoEstimate = null;
+        saveBtn.disabled = true;
+        saveFoodBtn.disabled = true;
+
+        if (!file) {
+          preview.style.display = "none";
+          estimateBox.textContent = "Čekám na fotku jídla.";
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.src = e.target.result;
+          preview.style.display = "block";
+          estimateBox.textContent = "Fotka načtena. Klikni na Odhadnout živiny.";
+        };
+        reader.readAsDataURL(file);
+      });
+
+      modeInputs.forEach((radio) => {
+        radio.addEventListener("change", async () => {
+          state.estimateMode = radio.value;
+          await saveState();
+        });
+      });
+    }
+
+    async function analyzePhotoEstimate() {
+      const preview = document.getElementById("photoPreview");
+      const estimateBox = document.getElementById("photoEstimate");
+      const saveBtn = document.getElementById("saveEstimate");
+      const saveFoodBtn = document.getElementById("saveEstimateFood");
+
+      if (!preview.src) {
+        estimateBox.textContent = "Nejdřív nahraj fotku jídla.";
+        return;
+      }
+
+      const mode = state.estimateMode || "local";
+      if (mode === "ai") {
+        estimateBox.textContent = "Analyzuju přes AI Vision model...";
+        const aiEstimate = await getAiPhotoEstimate(preview.src);
+        pendingPhotoEstimate = {
+          mode: "ai",
+          foodId: aiEstimate.foodId || "ai_photo_meal",
+          name: aiEstimate.name,
+          grams: aiEstimate.grams,
+          protein: aiEstimate.protein,
+          carbs: aiEstimate.carbs,
+          fat: aiEstimate.fat,
+          kcal: aiEstimate.kcal,
+          confidence: aiEstimate.confidence,
+          previewUrl: preview.src
+        };
+        estimateBox.textContent = `AI odhad: ${aiEstimate.name}, porce ${aiEstimate.grams} g, B ${aiEstimate.protein} g, S ${aiEstimate.carbs} g, T ${aiEstimate.fat} g, ${aiEstimate.kcal} kcal (spolehlivost ${aiEstimate.confidence} %).`;
+        saveBtn.disabled = false;
+        saveFoodBtn.disabled = false;
+        return;
+      }
+
+      const image = await loadImage(preview.src);
+      const canvas = document.getElementById("analysisCanvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const { width, height } = fitSize(image.width, image.height, 512);
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(image, 0, 0, width, height);
+
+      const data = ctx.getImageData(0, 0, width, height).data;
+      const metrics = computeImageMetrics(data);
+      const profile = choosePhotoProfile(metrics);
+      const grams = estimatePortionGrams(metrics);
+      const factor = grams / 100;
+
+      const protein = round(profile.protein * factor);
+      const carbs = round(profile.carbs * factor);
+      const fat = round(profile.fat * factor);
+      const kcal = round(profile.kcal * factor);
+      const confidence = Math.max(45, Math.min(86, Math.round(metrics.foodRatio * 70 + metrics.sat * 20)));
+
+      pendingPhotoEstimate = {
+        mode: "local",
+        foodId: profile.id,
+        name: profile.name,
+        grams,
+        protein,
+        carbs,
+        fat,
+        kcal,
+        confidence,
+        previewUrl: preview.src
+      };
+      estimateBox.textContent = `Odhad: ${profile.name}, porce ${grams} g, B ${protein} g, S ${carbs} g, T ${fat} g, ${kcal} kcal (spolehlivost ${confidence} %).`;
+      saveBtn.disabled = false;
+      saveFoodBtn.disabled = false;
+    }
+
+    async function getAiPhotoEstimate(imageDataUrl) {
+      const endpoint = (state.aiSettings?.endpoint || "").trim();
+      const model = (state.aiSettings?.model || "").trim();
+      const apiKey = (state.aiSettings?.apiKey || "").trim();
+
+      if (!endpoint || !model || !apiKey) {
+        throw new Error("Nejdřív vyplň AI endpoint, model a API klíč.");
+      }
+
+      const prompt = [
+        "Jsi nutriční asistent.",
+        "Z fotografie jídla odhadni: název jídla, porci v gramech, bílkoviny, sacharidy, tuky, kcal.",
+        "Vrať výstup jen jako JSON objekt bez markdownu.",
+        "Použij přesně klíče: name, grams, protein_g, carbs_g, fat_g, kcal, confidence.",
+        "confidence je celé číslo 0-100."
+      ].join(" ");
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          input: [
+            {
+              role: "user",
+              content: [
+                { type: "input_text", text: prompt },
+                { type: "input_image", image_url: imageDataUrl }
+              ]
+            }
+          ],
+          max_output_tokens: 350
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`AI API chyba (${response.status}): ${err.slice(0, 160)}`);
+      }
+
+      const result = await response.json();
+      const text = extractResponseText(result);
+      const parsed = parseJsonFromText(text);
+
+      return {
+        foodId: "ai_photo_meal",
+        name: String(parsed.name || "jídlo z fotky"),
+        grams: clampNumber(parsed.grams, 60, 900, 250),
+        protein: round(clampNumber(parsed.protein_g, 0, 180, 18)),
+        carbs: round(clampNumber(parsed.carbs_g, 0, 250, 35)),
+        fat: round(clampNumber(parsed.fat_g, 0, 160, 12)),
+        kcal: round(clampNumber(parsed.kcal, 20, 2200, 320)),
+        confidence: Math.round(clampNumber(parsed.confidence, 20, 99, 70))
+      };
+    }
+
+    function extractResponseText(result) {
+      if (typeof result.output_text === "string" && result.output_text.trim()) {
+        return result.output_text;
+      }
+
+      if (Array.isArray(result.output)) {
+        const chunks = [];
+        result.output.forEach((item) => {
+          if (Array.isArray(item.content)) {
+            item.content.forEach((part) => {
+              if (typeof part.text === "string") {
+                chunks.push(part.text);
+              }
+            });
+          }
+        });
+        if (chunks.length) return chunks.join("\n");
+      }
+
+      return JSON.stringify(result);
+    }
+
+    function parseJsonFromText(text) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (!match) throw new Error("AI odpověď neobsahuje JSON.");
+        return JSON.parse(match[0]);
+      }
+    }
+
+    function clampNumber(value, min, max, fallback) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.min(max, Math.max(min, n));
+    }
+
+    function computeImageMetrics(data) {
+      let total = 0;
+      let food = 0;
+      let sumR = 0;
+      let sumG = 0;
+      let sumB = 0;
+      let satAccumulator = 0;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        total += 1;
+        sumR += r;
+        sumG += g;
+        sumB += b;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const sat = max === 0 ? 0 : (max - min) / max;
+        satAccumulator += sat;
+
+        if (!(r > 235 && g > 235 && b > 235)) {
+          food += 1;
+        }
+      }
+
+      const avgR = sumR / total;
+      const avgG = sumG / total;
+      const avgB = sumB / total;
+
+      return {
+        avgR,
+        avgG,
+        avgB,
+        sat: satAccumulator / total,
+        foodRatio: total ? food / total : 0
+      };
+    }
+
+    function choosePhotoProfile(metrics) {
+      const colorWarm = metrics.avgR - metrics.avgB;
+      const greenBias = metrics.avgG - (metrics.avgR + metrics.avgB) / 2;
+
+      if (greenBias > 8 && metrics.sat > 0.2) {
+        return photoProfiles.find((p) => p.id === "salad");
+      }
+      if (colorWarm > 25 && metrics.avgR > metrics.avgG) {
+        return photoProfiles.find((p) => p.id === "pasta");
+      }
+      if (metrics.avgR < 120 && metrics.avgG < 120 && metrics.avgB < 120) {
+        return photoProfiles.find((p) => p.id === "meat_plate");
+      }
+      if (metrics.avgR > 170 && metrics.avgG > 145 && metrics.sat < 0.22) {
+        return photoProfiles.find((p) => p.id === "sandwich");
+      }
+      return photoProfiles.find((p) => p.id === "rice_bowl");
+    }
+
+    function estimatePortionGrams(metrics) {
+      const base = 120;
+      const byArea = metrics.foodRatio * 320;
+      const bySat = metrics.sat * 80;
+      const grams = Math.round(base + byArea + bySat);
+      return Math.max(120, Math.min(520, grams));
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Nepodařilo se načíst obrázek."));
+        img.src = src;
+      });
+    }
+
+    function fitSize(w, h, maxSide) {
+      const ratio = Math.min(maxSide / w, maxSide / h, 1);
+      return {
+        width: Math.round(w * ratio),
+        height: Math.round(h * ratio)
+      };
+    }
+
+    function bindButtons() {
+      document.getElementById("randomTip").addEventListener("click", () => {
+        const tip = tips[Math.floor(Math.random() * tips.length)];
+        tipBox.textContent = `Tip: ${tip}`;
+      });
+
+      document.getElementById("addReusableMeal").addEventListener("click", async () => {
+        const mealId = document.getElementById("reusableMealSelect").value;
+        const portionKey = document.getElementById("portionSizeSelect").value;
+        const food = getSelectableFoods().find((f) => f.id === mealId);
+        if (!food) {
+          tipBox.textContent = "Tip: Nejprve ulož jídlo z fotky do nabídky a pak ho přidej.";
+          return;
+        }
+
+        await addMealFromTemplate(food, portionKey);
+        addXp(5);
+        await saveState();
+        renderMeals();
+        refreshStats();
+        await refreshHistoryView();
+      });
+
+      document.getElementById("clearMeals").addEventListener("click", async () => {
+        await clearTodayMeals();
+        renderMeals();
+        refreshStats();
+        await refreshHistoryView();
+      });
+
+      document.getElementById("analyzePhoto").addEventListener("click", async () => {
+        try {
+          await analyzePhotoEstimate();
+        } catch (err) {
+          document.getElementById("photoEstimate").textContent = err?.message || "Nepodařilo se analyzovat fotku. Zkus jiný snímek.";
+        }
+      });
+
+      document.getElementById("saveAiSettings").addEventListener("click", async () => {
+        state.aiSettings = {
+          endpoint: document.getElementById("apiEndpoint").value.trim(),
+          model: document.getElementById("apiModel").value.trim(),
+          apiKey: document.getElementById("apiKey").value.trim()
+        };
+        await saveState();
+        document.getElementById("photoEstimate").textContent = "AI nastavení uloženo.";
+      });
+
+      document.getElementById("saveEstimate").addEventListener("click", async () => {
+        if (!pendingPhotoEstimate) return;
+
+        await addPhotoEstimatedMeal(pendingPhotoEstimate);
+        pendingPhotoEstimate = null;
+        document.getElementById("saveEstimate").disabled = true;
+        document.getElementById("saveEstimateFood").disabled = true;
+        document.getElementById("photoEstimate").textContent += " Uloženo do jídelníčku.";
+
+        addXp(8);
+        await saveState();
+        renderMeals();
+        refreshStats();
+        celebrate();
+        await refreshHistoryView();
+      });
+
+      document.getElementById("saveEstimateFood").addEventListener("click", async () => {
+        if (!pendingPhotoEstimate) return;
+        const reusable = buildPer100FromTotals(
+          pendingPhotoEstimate.name,
+          Number(pendingPhotoEstimate.protein) || 0,
+          Number(pendingPhotoEstimate.carbs) || 0,
+          Number(pendingPhotoEstimate.fat) || 0,
+          Number(pendingPhotoEstimate.kcal) || 0,
+          Number(pendingPhotoEstimate.grams) || 1
+        );
+        const status = await saveFoodToCatalog(reusable);
+        document.getElementById("photoEstimate").textContent += status === "updated"
+          ? " Nabídka jídel byla aktualizována."
+          : " Jídlo bylo přidáno do nabídky jídel.";
+      });
+
+    }
+
+    function celebrate() {
+      const layer = document.getElementById("celebrate");
+      for (let i = 0; i < 18; i += 1) {
+        const spark = document.createElement("span");
+        spark.className = "spark";
+        spark.style.left = `${Math.random() * 100}%`;
+        spark.style.bottom = `${Math.random() * 35}%`;
+        spark.style.setProperty("--x", `${(Math.random() - 0.5) * 70}px`);
+        spark.style.background = ["#ffb703", "#fb7185", "#34d399", "#60a5fa"][i % 4];
+        layer.appendChild(spark);
+        setTimeout(() => spark.remove(), 900);
+      }
+    }
+  </script>
+</body>
+</html>
