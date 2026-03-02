@@ -365,12 +365,18 @@
       margin-top: 10px;
     }
 
-    input {
+    input,
+    textarea {
       border: 2px solid #e5e9ee;
       border-radius: 12px;
       padding: 10px;
       font-weight: 700;
       font-family: inherit;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 74px;
     }
 
     .totals {
@@ -710,10 +716,7 @@
       </div>
       <div class="bar-wrap"><div class="bar" id="xpBar"></div></div>
       <div class="tiny" id="dailyProgressLabel">Dnešní výživový progres: Začátek dne.</div>
-      <div class="btn-row">
-        <button class="primary" id="randomTip">Náhodný tip dne</button>
-      </div>
-      <div class="note" id="tipBox">Tip: Jez pravidelně. Snídaně + oběd + večeře a 1-2 menší svačiny.</div>
+      <div class="note" id="statusBox">Info: Přidávej jídla průběžně během dne.</div>
     </section>
 
     <nav class="tabs" id="tabsNav">
@@ -721,7 +724,7 @@
       <button class="tab-btn" data-tab="missions">Mise</button>
       <button class="tab-btn" data-tab="meals">Jídelníček</button>
       <button class="tab-btn" data-tab="history">Historie</button>
-      <button class="tab-btn" data-tab="photo">Foto odhad</button>
+      <button class="tab-btn" data-tab="photo">Odhad jídla</button>
       <button class="tab-btn" data-tab="badges">Odznaky</button>
     </nav>
 
@@ -823,8 +826,8 @@
     <section class="tab-panel" id="tab-photo">
       <div class="grid">
         <article class="card">
-          <h2>Foto odhad živin</h2>
-          <p class="sub">Nahraj fotku jídla. Aplikace automaticky odhadne porci a živiny.</p>
+          <h2>Odhad živin</h2>
+          <p class="sub">Nahraj fotku jídla nebo napiš krátký popis. Aplikace odhadne porci a živiny.</p>
           <div class="photo-wrap">
             <input class="file-input-hidden" type="file" id="photoInput" accept="image/*">
             <label class="upload-cta" for="photoInput">
@@ -832,8 +835,9 @@
               <span class="hint">Klikni pro výběr souboru z telefonu nebo počítače</span>
               <span class="btn primary" role="button">Vybrat fotografii</span>
             </label>
+            <textarea id="mealDescription" placeholder="Nebo popiš jídlo textem: např. &#34;kuřecí maso s rýží a zeleninou, střední porce&#34;"></textarea>
             <img id="photoPreview" class="photo-preview" alt="Nahrané jídlo">
-            <div class="estimate-box" id="photoEstimate">Čekám na fotku jídla.</div>
+            <div class="estimate-box" id="photoEstimate">Nahraj fotku nebo napiš popis jídla.</div>
             <div class="btn-row">
               <button class="primary" id="analyzePhoto">Odhadnout živiny</button>
               <button class="soft" id="saveEstimate" disabled>Uložit odhad do jídelníčku</button>
@@ -844,7 +848,7 @@
               <div class="photo-settings">
                 <div class="photo-mode">
                   <label><input type="radio" name="estimateMode" value="local" checked> Rychlý lokální odhad</label>
-                  <label><input type="radio" name="estimateMode" value="ai"> Přesnější AI Vision</label>
+                  <label><input type="radio" name="estimateMode" value="ai"> Přesnější AI (foto/popis)</label>
                 </div>
                 <div class="ai-grid">
                   <input id="apiEndpoint" class="full" value="https://api.openai.com/v1/responses" placeholder="API endpoint">
@@ -855,7 +859,7 @@
                 <div class="tiny">Klíč se ukládá jen lokálně v této aplikaci (IndexedDB).</div>
               </div>
             </details>
-            <div class="tiny">Odhad je orientační a počítá se automaticky z barev a plochy jídla na fotce.</div>
+            <div class="tiny">Odhad je orientační. Funguje z fotky nebo z textového popisu jídla.</div>
           </div>
           <canvas id="analysisCanvas" width="512" height="512" style="display:none"></canvas>
         </article>
@@ -918,29 +922,6 @@
       { id: "sandwich", name: "sendvič/pečivo", protein: 10, carbs: 35, fat: 8, kcal: 260 }
     ];
 
-    const tips = [
-      "K snídani zkus jogurt nebo skyr + ovoce + ovesné vločky.",
-      "Do každého hlavního jídla přidej bílkovinu: vejce, rybu, maso, luštěniny nebo sýr.",
-      "K svačině se hodí kombinace: pečivo + sýr/cottage + zelenina.",
-      "Když je těžké sníst velkou porci, dej si menší porce častěji během dne.",
-      "Praktická svačina do školy: kefír nebo proteinový jogurt + banán.",
-      "Do kaše nebo jogurtu přidej ořechové máslo, zvýší energii i živiny.",
-      "Vajíčka jsou rychlá volba: natvrdo, míchaná nebo omeleta do 10 minut.",
-      "Po sportu si dej do 60 minut jídlo se sacharidy a bílkovinou.",
-      "Skvělá dvojice: rýže + kuře/tempeh, nebo těstoviny + tuňák/sýr.",
-      "Když nemáš chuť jíst, pomůže tekutá svačina: mléčný nápoj nebo smoothie.",
-      "Do polévky můžeš přidat luštěniny, vejce nebo jogurt pro více bílkovin.",
-      "K pečivu přidej vždy něco navíc: šunku, sýr, hummus nebo tvarohovou pomazánku.",
-      "Neboj se 'dvojité' svačiny: třeba jogurt a k tomu menší sendvič.",
-      "Pravidelnost je důležitá: zkus 3 hlavní jídla a 2 svačiny denně.",
-      "Při únavě bývá užitečné jídlo s bílkovinou místo samotné sladkosti.",
-      "Rychlý tip: hrst ořechů + ovoce + mléčný výrobek je super trio.",
-      "K večeři zkus něco jednoduchého: tortilla s vejcem/sýrem a zeleninou.",
-      "Když je jídlo stresující, je v pořádku říct si o pomoc dospělému, kterému věříš.",
-      "Podpora funguje: jez s rodinou nebo kamarádkou, často se jí snáz.",
-      "Pokud máš strach z jídla nebo dlouhodobě jíš málo, promluv si s lékařem nebo nutričním terapeutem."
-    ];
-
     const portionMultipliers = {
       small: 0.8,
       normal: 1,
@@ -960,7 +941,7 @@
     const doneNode = document.getElementById("doneCount");
     const xpBar = document.getElementById("xpBar");
     const dailyProgressLabel = document.getElementById("dailyProgressLabel");
-    const tipBox = document.getElementById("tipBox");
+    const statusBox = document.getElementById("statusBox");
 
     init();
 
@@ -1169,7 +1150,7 @@
     async function addPhotoEstimatedMeal(estimate) {
       await addMealEntry({
         date: todayKey(),
-        source: "photo",
+        source: estimate.source || "estimate",
         foodId: estimate.foodId,
         name: estimate.name,
         portionLabel: "odhad porce",
@@ -1464,7 +1445,7 @@
           } else {
             await updateSavedFood(food.id, payload);
           }
-          tipBox.textContent = `Tip: Jídlo „${payload.name}“ bylo upraveno.`;
+          statusBox.textContent = `Info: Jídlo „${payload.name}“ bylo upraveno.`;
         });
         actions.appendChild(editBtn);
 
@@ -1473,7 +1454,7 @@
         removeBtn.textContent = "Smazat";
         removeBtn.addEventListener("click", async () => {
           await deleteFoodFromCatalog(food.id);
-          tipBox.textContent = `Tip: Jídlo „${food.name}“ bylo smazáno z nabídky.`;
+          statusBox.textContent = `Info: Jídlo „${food.name}“ bylo smazáno z nabídky.`;
         });
         actions.appendChild(removeBtn);
 
@@ -1490,7 +1471,7 @@
       renderMeals();
       refreshStats();
       await refreshHistoryView();
-      tipBox.textContent = "Tip: Nový den, nový začátek. Dnes stačí malé kroky.";
+      statusBox.textContent = "Info: Nový den začal. Mise i progres se počítají od nuly.";
     }
 
     function scheduleMidnightReset() {
@@ -1553,7 +1534,7 @@
           .forEach((meal) => {
             const row = document.createElement("div");
             row.className = "history-item";
-            const source = meal.source === "photo" ? " [foto]" : "";
+            const source = (meal.source === "photo" || meal.source === "estimate") ? " [odhad]" : "";
             const portion = meal.portionLabel || (meal.grams ? `${meal.grams} g` : "porce");
             row.textContent = `${meal.name}${source} (${portion}) | B ${meal.protein} g, S ${meal.carbs} g, T ${meal.fat} g, ${meal.kcal} kcal`;
             items.appendChild(row);
@@ -1587,7 +1568,7 @@
 
           const text = document.createElement("span");
           text.className = "meal-info";
-          const sourceLabel = meal.source === "photo" ? " [foto]" : "";
+          const sourceLabel = (meal.source === "photo" || meal.source === "estimate") ? " [odhad]" : "";
           const portionText = meal.portionLabel || (meal.grams ? `${meal.grams} g` : "porce");
           text.textContent = `${meal.name}${sourceLabel} (${portionText}) | B ${meal.protein} g, S ${meal.carbs} g, T ${meal.fat} g, ${meal.kcal} kcal`;
           main.appendChild(text);
@@ -1595,7 +1576,7 @@
           const actions = document.createElement("div");
           actions.className = "meal-actions";
 
-          if (meal.source === "photo") {
+          if (meal.source === "photo" || meal.source === "estimate") {
             const renameButton = document.createElement("button");
             renameButton.type = "button";
             renameButton.textContent = "Přejmenovat";
@@ -1623,9 +1604,9 @@
                 Number(meal.referenceServingGrams || meal.grams) || 220
               );
               const status = await saveFoodToCatalog(reusable);
-              tipBox.textContent = status === "updated"
-                ? `Tip: Jídlo „${meal.name}“ bylo v nabídce aktualizováno.`
-                : `Tip: Jídlo „${meal.name}“ je nově v nabídce jídel.`;
+              statusBox.textContent = status === "updated"
+                ? `Info: Jídlo „${meal.name}“ bylo v nabídce aktualizováno.`
+                : `Info: Jídlo „${meal.name}“ je nově v nabídce jídel.`;
             });
             actions.appendChild(saveFoodButton);
           }
@@ -1796,6 +1777,7 @@
     function setupPhotoModule() {
       const photoInput = document.getElementById("photoInput");
       const preview = document.getElementById("photoPreview");
+      const descriptionInput = document.getElementById("mealDescription");
       const estimateBox = document.getElementById("photoEstimate");
       const saveBtn = document.getElementById("saveEstimate");
       const saveFoodBtn = document.getElementById("saveEstimateFood");
@@ -1818,8 +1800,11 @@
         saveFoodBtn.disabled = true;
 
         if (!file) {
+          preview.src = "";
           preview.style.display = "none";
-          estimateBox.textContent = "Čekám na fotku jídla.";
+          estimateBox.textContent = descriptionInput.value.trim()
+            ? "Popis je připraven. Klikni na Odhadnout živiny."
+            : "Nahraj fotku nebo napiš popis jídla.";
           return;
         }
 
@@ -1832,6 +1817,17 @@
         reader.readAsDataURL(file);
       });
 
+      descriptionInput.addEventListener("input", () => {
+        pendingPhotoEstimate = null;
+        saveBtn.disabled = true;
+        saveFoodBtn.disabled = true;
+        if (descriptionInput.value.trim()) {
+          estimateBox.textContent = "Popis uložen. Klikni na Odhadnout živiny.";
+        } else if (!preview.src) {
+          estimateBox.textContent = "Nahraj fotku nebo napiš popis jídla.";
+        }
+      });
+
       modeInputs.forEach((radio) => {
         radio.addEventListener("change", async () => {
           state.estimateMode = radio.value;
@@ -1842,22 +1838,26 @@
 
     async function analyzePhotoEstimate() {
       const preview = document.getElementById("photoPreview");
+      const descriptionInput = document.getElementById("mealDescription");
       const estimateBox = document.getElementById("photoEstimate");
       const saveBtn = document.getElementById("saveEstimate");
       const saveFoodBtn = document.getElementById("saveEstimateFood");
+      const description = descriptionInput.value.trim();
+      const hasPhoto = Boolean(preview.src);
 
-      if (!preview.src) {
-        estimateBox.textContent = "Nejdřív nahraj fotku jídla.";
+      if (!hasPhoto && !description) {
+        estimateBox.textContent = "Nejdřív nahraj fotku nebo napiš popis jídla.";
         return;
       }
 
       const mode = state.estimateMode || "local";
-      if (mode === "ai") {
-        estimateBox.textContent = "Analyzuju přes AI Vision model...";
-        const aiEstimate = await getAiPhotoEstimate(preview.src);
+      if (mode === "ai" && hasPhoto) {
+        estimateBox.textContent = "Analyzuju fotku přes AI Vision model...";
+        const aiEstimate = await getAiPhotoEstimate(preview.src, description);
         pendingPhotoEstimate = {
           mode: "ai",
-          foodId: aiEstimate.foodId || "ai_photo_meal",
+          source: "estimate",
+          foodId: aiEstimate.foodId || "ai_estimate_meal",
           name: aiEstimate.name,
           grams: aiEstimate.grams,
           protein: aiEstimate.protein,
@@ -1868,6 +1868,49 @@
           previewUrl: preview.src
         };
         estimateBox.textContent = `AI odhad: ${aiEstimate.name}, porce ${aiEstimate.grams} g, B ${aiEstimate.protein} g, S ${aiEstimate.carbs} g, T ${aiEstimate.fat} g, ${aiEstimate.kcal} kcal (spolehlivost ${aiEstimate.confidence} %).`;
+        saveBtn.disabled = false;
+        saveFoodBtn.disabled = false;
+        return;
+      }
+
+      if (mode === "ai" && description) {
+        estimateBox.textContent = "Analyzuju textový popis přes AI...";
+        const aiTextEstimate = await getAiTextEstimate(description);
+        pendingPhotoEstimate = {
+          mode: "ai",
+          source: "estimate",
+          foodId: aiTextEstimate.foodId || "ai_text_meal",
+          name: aiTextEstimate.name,
+          grams: aiTextEstimate.grams,
+          protein: aiTextEstimate.protein,
+          carbs: aiTextEstimate.carbs,
+          fat: aiTextEstimate.fat,
+          kcal: aiTextEstimate.kcal,
+          confidence: aiTextEstimate.confidence,
+          previewUrl: hasPhoto ? preview.src : ""
+        };
+        estimateBox.textContent = `AI odhad: ${aiTextEstimate.name}, porce ${aiTextEstimate.grams} g, B ${aiTextEstimate.protein} g, S ${aiTextEstimate.carbs} g, T ${aiTextEstimate.fat} g, ${aiTextEstimate.kcal} kcal (spolehlivost ${aiTextEstimate.confidence} %).`;
+        saveBtn.disabled = false;
+        saveFoodBtn.disabled = false;
+        return;
+      }
+
+      if (!hasPhoto && description) {
+        const localTextEstimate = getLocalTextEstimate(description);
+        pendingPhotoEstimate = {
+          mode: "local",
+          source: "estimate",
+          foodId: localTextEstimate.foodId || "local_text_meal",
+          name: localTextEstimate.name,
+          grams: localTextEstimate.grams,
+          protein: localTextEstimate.protein,
+          carbs: localTextEstimate.carbs,
+          fat: localTextEstimate.fat,
+          kcal: localTextEstimate.kcal,
+          confidence: localTextEstimate.confidence,
+          previewUrl: ""
+        };
+        estimateBox.textContent = `Odhad z popisu: ${localTextEstimate.name}, porce ${localTextEstimate.grams} g, B ${localTextEstimate.protein} g, S ${localTextEstimate.carbs} g, T ${localTextEstimate.fat} g, ${localTextEstimate.kcal} kcal (spolehlivost ${localTextEstimate.confidence} %).`;
         saveBtn.disabled = false;
         saveFoodBtn.disabled = false;
         return;
@@ -1897,6 +1940,7 @@
 
       pendingPhotoEstimate = {
         mode: "local",
+        source: "estimate",
         foodId: profile.id,
         name: profile.name,
         grams,
@@ -1912,7 +1956,7 @@
       saveFoodBtn.disabled = false;
     }
 
-    async function getAiPhotoEstimate(imageDataUrl) {
+    async function getAiPhotoEstimate(imageDataUrl, descriptionText = "") {
       const endpoint = (state.aiSettings?.endpoint || "").trim();
       const model = (state.aiSettings?.model || "").trim();
       const apiKey = (state.aiSettings?.apiKey || "").trim();
@@ -1924,6 +1968,7 @@
       const prompt = [
         "Jsi nutriční asistent.",
         "Z fotografie jídla odhadni: název jídla, porci v gramech, bílkoviny, sacharidy, tuky, kcal.",
+        descriptionText ? `Doplňující text od uživatele: ${descriptionText}.` : "",
         "Vrať výstup jen jako JSON objekt bez markdownu.",
         "Použij přesně klíče: name, grams, protein_g, carbs_g, fat_g, kcal, confidence.",
         "confidence je celé číslo 0-100."
@@ -1968,6 +2013,93 @@
         fat: round(clampNumber(parsed.fat_g, 0, 160, 12)),
         kcal: round(clampNumber(parsed.kcal, 20, 2200, 320)),
         confidence: Math.round(clampNumber(parsed.confidence, 20, 99, 70))
+      };
+    }
+
+    async function getAiTextEstimate(descriptionText) {
+      const endpoint = (state.aiSettings?.endpoint || "").trim();
+      const model = (state.aiSettings?.model || "").trim();
+      const apiKey = (state.aiSettings?.apiKey || "").trim();
+
+      if (!endpoint || !model || !apiKey) {
+        throw new Error("Nejdřív vyplň AI endpoint, model a API klíč.");
+      }
+
+      const prompt = [
+        "Jsi nutriční asistent.",
+        "Z textového popisu jídla odhadni: název jídla, porci v gramech, bílkoviny, sacharidy, tuky, kcal.",
+        `Popis jídla: ${descriptionText}.`,
+        "Vrať výstup jen jako JSON objekt bez markdownu.",
+        "Použij přesně klíče: name, grams, protein_g, carbs_g, fat_g, kcal, confidence.",
+        "confidence je celé číslo 0-100."
+      ].join(" ");
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          input: prompt,
+          max_output_tokens: 300
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`AI API chyba (${response.status}): ${err.slice(0, 160)}`);
+      }
+
+      const result = await response.json();
+      const text = extractResponseText(result);
+      const parsed = parseJsonFromText(text);
+
+      return {
+        foodId: "ai_text_meal",
+        name: String(parsed.name || "jídlo z popisu"),
+        grams: clampNumber(parsed.grams, 60, 900, 230),
+        protein: round(clampNumber(parsed.protein_g, 0, 180, 16)),
+        carbs: round(clampNumber(parsed.carbs_g, 0, 250, 32)),
+        fat: round(clampNumber(parsed.fat_g, 0, 160, 11)),
+        kcal: round(clampNumber(parsed.kcal, 20, 2200, 310)),
+        confidence: Math.round(clampNumber(parsed.confidence, 20, 99, 65))
+      };
+    }
+
+    function getLocalTextEstimate(descriptionText) {
+      const text = String(descriptionText || "").toLowerCase();
+      const words = text.split(/[^a-zA-Zá-žÁ-Ž0-9]+/).filter(Boolean);
+      const foods = getSelectableFoods();
+
+      const scored = foods.map((food) => {
+        const nameWords = food.name.toLowerCase().split(/[^a-zA-Zá-žÁ-Ž0-9]+/).filter(Boolean);
+        let score = 0;
+        nameWords.forEach((w) => {
+          if (words.includes(w)) score += 2;
+          if (text.includes(w)) score += 1;
+        });
+        return { food, score };
+      }).sort((a, b) => b.score - a.score);
+
+      const best = scored[0] && scored[0].score > 0 ? scored[0].food : photoProfiles[1];
+      const sizeHint = text.includes("malá porce") || text.includes("mensi") || text.includes("menší") ? 0.8
+        : (text.includes("velká porce") || text.includes("větší") || text.includes("double")) ? 1.25
+        : 1;
+
+      const grams = Math.round((Number(best.defaultServingGrams) || 220) * sizeHint);
+      const factor = grams / 100;
+
+      return {
+        foodId: best.id || "text_estimate",
+        name: best.name || "jídlo z popisu",
+        grams,
+        protein: round((best.protein || 5.5) * factor),
+        carbs: round((best.carbs || 28) * factor),
+        fat: round((best.fat || 3.5) * factor),
+        kcal: round((best.kcal || 165) * factor),
+        confidence: scored[0] && scored[0].score > 0 ? 72 : 55
       };
     }
 
@@ -2097,7 +2229,7 @@
     async function addReusableFoodById(mealId, portionKey) {
       const food = getSelectableFoods().find((f) => f.id === mealId);
       if (!food) {
-        tipBox.textContent = "Tip: Nejprve ulož jídlo z fotky do nabídky a pak ho přidej.";
+        statusBox.textContent = "Info: Nejprve ulož jídlo do nabídky a pak ho přidej.";
         return;
       }
       await addMealFromTemplate(food, portionKey);
@@ -2109,11 +2241,6 @@
     }
 
     function bindButtons() {
-      document.getElementById("randomTip").addEventListener("click", () => {
-        const tip = tips[Math.floor(Math.random() * tips.length)];
-        tipBox.textContent = `Tip: ${tip}`;
-      });
-
       document.getElementById("addReusableMeal").addEventListener("click", async () => {
         const mealId = document.getElementById("reusableMealSelect").value;
         const portionKey = document.getElementById("portionSizeSelect").value;
@@ -2131,7 +2258,7 @@
         try {
           await analyzePhotoEstimate();
         } catch (err) {
-          document.getElementById("photoEstimate").textContent = err?.message || "Nepodařilo se analyzovat fotku. Zkus jiný snímek.";
+          document.getElementById("photoEstimate").textContent = err?.message || "Nepodařilo se analyzovat vstup. Zkus jinou fotku nebo jiný popis.";
         }
       });
 
